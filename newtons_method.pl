@@ -38,3 +38,7 @@ newtons_method(X, F) :-
     newton_improve(X3, X4, F),
     newton_improve(X4, X5, F),
     newton_improve(X5, X, F).
+
+%example of using this
+% calculate a zero of Y = -5 + X^2 + 3*X^3
+% newtons_method(X, [-5, 0, 1, 3]).
