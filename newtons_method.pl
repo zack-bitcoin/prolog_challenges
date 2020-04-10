@@ -42,3 +42,4 @@ newtons_method(X, F) :-
 %example of using this
 % calculate a zero of Y = -5 + X^2 + 3*X^3
 % newtons_method(X, [-5, 0, 1, 3]).
+% X = 2.251083120039576
