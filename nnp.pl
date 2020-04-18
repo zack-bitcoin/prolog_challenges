@@ -161,13 +161,201 @@ is_in(X, [X|_]).
 is_in(X, [_|T]) :-
     is_in(X, T).
 
-combinations(0, _, []).
-combinations(N, L, [H|T]) :-
+%R is every way to get N elements, from list L.
+combinations(0, [], []).
+combinations(N, [H|L], [H|R]) :-
     M is N-1,
-    length(L, S),
-    S2 is S-1,
-    range(0, S2, R), 
-    is_in(E, R),
-    remove_at(H, L, E, L2),
-    combinations(M, L2, T).
+    combinations(M, L, R).
+combinations(N, [_|L], R) :-
+    combinations(N, L, R).
 
+%group(L, S, Gs).
+%L is input list, S is list of sizes, Gs is output list of lists of sublists of L. Every possible combination.
+
+group(_, [], []).
+group(L, [SH|ST], [G|GT]) :-
+    combinations(SH, L, G),
+    remove_things(L, G, L2),
+    group(L2, ST, GT).
+remove_things(L, [], L).
+remove_things(L, [H|G], L2) :-
+    remove_it(L, H, L3),
+    remove_things(L3, G, L2).
+remove_it([H|L], H, L).
+remove_it([X|L], H, [X|L2]) :-
+    remove_it(L, H, L2).
+
+sort2([X], [X]).
+sort2(L, [H|[H2|T]]) :-
+    is_in(H, L),
+    remove_it(L, H, L2),
+    sort2(L2, [H2|T]),
+    H @>= H2.
+
+lsort([X], [X]).
+lsort(L, [H|[H2|T]]) :-
+    is_in(H, L),
+    remove_it(L, H, L2),
+    lsort(L2, [H2|T]),
+    length(H, S1),
+    length(H2, S2),
+    S2 @=< S1.
+
+lfsort(L, R) :-
+    lengths(L, L2),
+    sort2(L2, L3),
+    encode(L3, F),
+    lfsort2(F, L, R).
+lengths([],[]).
+lengths([H|T], [S|R]) :-
+    length(H, S),
+    lengths(T, R).
+lfsort2(_, [X], [X]).
+lfsort2(Frequencies, L, [H|[H2|T]]) :-
+    is_in(H, L),
+    remove_it(L, H, L2),
+    lfsort2(Frequencies, L2, [H2|T]),
+    length(H, S1),
+    length(H2, S2),
+    lookup(S1, Frequencies, F1),
+    lookup(S2, Frequencies, F2),
+    F2 @=< F1.
+lookup(K, [[V, K]|_], V).
+lookup(K, [_|T], V) :-
+    lookup(K, T, V).
+
+
+sqrt(X, R) :-
+    sqrt_improve(1, B, X),
+    sqrt_improve(B, B2, X),
+    sqrt_improve(B2, B3, X),
+    sqrt_improve(B3, B4, X),
+    sqrt_improve(B4, R, X).
+sqrt_improve(S, B, X) :-
+    N is X / S,
+    B is floor((N + S) / 2).
+is_prime(2).
+is_prime(X) :-
+    X @> 1,
+    sqrt(X, SX),
+    is_prime2(X, SX).
+is_prime2(X, S) :-
+    range(2, S, R),
+    none_divides(R, X).
+is_not_prime(0).
+is_not_prime(1).
+is_not_prime(X) :-
+    X @> 1,
+    sqrt(X, SX),
+    is_not_prime2(X, SX).
+is_not_prime2(X, S) :-
+    some_divides(2, S, X).
+%    prime_factors(X, F),
+%    length(F, S),
+%    S =\= 1.
+    %S2 @> 0,
+    %S is 1 + 0,
+%S @>= 2.
+none_divides([], _).
+none_divides([H|T], X) :-
+    X2 is X mod H,
+    X2 =\= 0,
+    none_divides(T, X).
+
+some_divides(S, _, X) :-
+    0 is X mod S, !.
+some_divides(S, T, X) :-
+    S @=< T,
+    S2 is S + 1,
+    some_divides(S2, T, X).
+
+gcd(X, Y, D) :-
+    X < Y,
+    gcd(Y, X, D).
+gcd(X, 0, X).
+gcd(X, Y, D) :-
+    Y =\= 0,
+    Y2 is X mod Y,
+    gcd(Y, Y2, D).
+
+coprime(X, Y) :-
+    gcd(X, Y, 1).
+not_coprime(X, Y) :-
+    gcd(X, Y, G),
+    G =\= 1.
+
+totient_phi(X, T) :-
+    range(1, X, R),
+    totient2(R, 0, X, T).
+totient2([], T, _, T).
+totient2([H|T], R, X, Z) :-
+    coprime(H, X),
+    S is R + 1,
+    totient2(T, S, X, Z).
+totient2([H|T], R, X, Z) :-
+    not_coprime(H, X),
+    totient2(T, R, X, Z).
+
+prime_factors(1, []).
+prime_factors(X, [F|T]) :-
+    lowest_factor(X, F),
+    Y is round(X / F),
+    prime_factors(Y, T).
+lowest_factor(X, F) :-
+    sqrt(X, S),
+    lowest_factor2(X, S, 2, F).
+lowest_factor2(X, S, N, X) :-
+    N > S.
+lowest_factor2(X, S, N, F) :-
+    coprime(X, N),
+    M is N + 1,
+    lowest_factor2(X, S, M, F).
+lowest_factor2(X, _, N, N) :-
+    not_coprime(X, N).
+    
+
+prime_factors_mult(X, R) :-
+    prime_factors(X, L),
+    encode(L, R).
+
+
+totient_phi2(M, R) :-
+    prime_factors_mult(M, F),
+    %F [[Many, Prime1]...]
+    % PI( (p - 1)*(p^(m-1)))
+
+    totient_phi2b(F, 1, R).
+totient_phi2b([], R, R).
+totient_phi2b([[M, P]|T], A, R) :-
+    A2 is A * (P - 1) * round(P ** (M - 1)),
+    totient_phi2b(T, A2, R).
+
+list_of_primes(S, S, []).
+list_of_primes(Start, End, [Start|T]) :-
+    is_prime(Start),
+    S2 is Start + 1,
+    list_of_primes(S2, End, T).
+list_of_primes(Start, End, T) :-
+    is_not_prime(Start),
+    S2 is Start + 1,
+    list_of_primes(S2, End, T).
+
+goldbach(N, [A, B]) :-
+    list_of_primes(1, N, P),
+    is_in(A, P),
+    is_in(B, P),
+    A @> B,
+    N is A + B.
+
+goldbach_list(Start, End, L) :-
+    1 is Start mod 2,
+    S2 is Start + 1,
+    goldbach_list(S2, End, L).
+goldbach_list(Start, End, []) :-
+    Start @> End.
+goldbach_list(Start, End, [[Start, P1, P2]|T]) :-
+    0 is Start mod 2,
+    goldbach(Start, [P1, P2]),
+    S2 is Start + 2,
+    goldbach_list(S2, End, T).
+    
