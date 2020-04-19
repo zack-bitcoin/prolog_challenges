@@ -245,17 +245,11 @@ is_prime2(X, S) :-
 is_not_prime(0).
 is_not_prime(1).
 is_not_prime(X) :-
-    X @> 1,
+    X @> 3,
     sqrt(X, SX),
     is_not_prime2(X, SX).
 is_not_prime2(X, S) :-
     some_divides(2, S, X).
-%    prime_factors(X, F),
-%    length(F, S),
-%    S =\= 1.
-    %S2 @> 0,
-    %S is 1 + 0,
-%S @>= 2.
 none_divides([], _).
 none_divides([H|T], X) :-
     X2 is X mod H,
@@ -330,7 +324,8 @@ totient_phi2b([[M, P]|T], A, R) :-
     A2 is A * (P - 1) * round(P ** (M - 1)),
     totient_phi2b(T, A2, R).
 
-list_of_primes(S, S, []).
+list_of_primes(S, S, []):-
+    !.
 list_of_primes(Start, End, [Start|T]) :-
     is_prime(Start),
     S2 is Start + 1,
@@ -341,21 +336,111 @@ list_of_primes(Start, End, T) :-
     list_of_primes(S2, End, T).
 
 goldbach(N, [A, B]) :-
-    list_of_primes(1, N, P),
-    is_in(A, P),
-    is_in(B, P),
-    A @> B,
-    N is A + B.
+    goldbach2(0, N, A, B).
+goldbach2(A, B, A, B) :-
+    is_prime(A),
+    is_prime(B),
+    !.
+goldbach2(A1, B1, A2, B2) :-
+    A1 @< B1,
+    (is_not_prime(A1);
+     is_not_prime(B1)),
+    A3 is A1 + 1,
+    B3 is B1 - 1,
+    goldbach2(A3, B3, A2, B2).
 
 goldbach_list(Start, End, L) :-
+    Start @=< End,
     1 is Start mod 2,
     S2 is Start + 1,
     goldbach_list(S2, End, L).
 goldbach_list(Start, End, []) :-
     Start @> End.
 goldbach_list(Start, End, [[Start, P1, P2]|T]) :-
+    Start @=< End,
     0 is Start mod 2,
     goldbach(Start, [P1, P2]),
     S2 is Start + 2,
     goldbach_list(S2, End, T).
-    
+
+goldbach_list(Start, End, Min, L) :-
+    goldbach_list(Start, End, L2),
+    above_min(L2, L, Min).
+
+above_min([], [], _).
+above_min([[S, P1, P2]|T1],
+          [[S, P1, P2]|T2], Min) :-
+    P1 @> Min,
+    above_min(T1, T2, Min).
+above_min([[_, P1, _]|T1], T2, Min) :-
+    P1 @=< Min,
+    above_min(T1, T2, Min).
+            
+%Logic and Codes
+
+and(A, B) :- A, B.
+or(A, B) :- A; B.
+not(A) :- \+ A.
+nand(A, B) :- \+ and(A, B).
+xor(A, B) :- A, \+ B.
+xor(A, B) :- B, \+ A.
+nor(A, B) :- \+ or(A, B).
+impl(A, B) :- \+ A; B.
+equ(A, B) :- A, B.
+equ(A, B) :- \+ A, \+ B.
+
+bind(true).
+bind(fail).
+
+table(A, B, Code) :-
+    bind(A),
+    bind(B),
+    do(A, B, Code),
+    fail.
+do(A,B,_) :-
+    write(A),
+    write('  '),
+    write(B),
+    write('  '),
+    fail.
+do(_,_,Expr) :-
+    Expr,
+    !,
+    write(true),
+    nl.
+do(_,_,_) :-
+    write(fail),
+    nl.
+
+:- op(500, xfx, 'and').
+:- op(500, xfx, 'or').
+:- op(500, fx, 'not').
+:- op(500, xfx, 'nand').
+:- op(500, xfx, 'xor').
+:- op(500, xfx, 'impl').
+:- op(500, xfx, 'equ').
+
+table(L, Code) :-
+    bind_all(L),
+    do(L, Code),
+    fail.
+bind_all([]).
+bind_all([H|T]) :-
+    bind(H),
+    bind_all(T).
+do(L, _) :-
+    write_all(L),
+    fail.
+do(_, Expr) :-
+    Expr,
+    !,
+    write(true),
+    nl.
+do(_, _) :-
+    write(fail),
+    nl.
+write_all([]).
+write_all([H|T]) :-
+    write(H),
+    write(' '),
+    write_all(T).
