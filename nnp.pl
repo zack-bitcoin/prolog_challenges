@@ -444,3 +444,147 @@ write_all([H|T]) :-
     write(H),
     write(' '),
     write_all(T).
+
+%skipping 49 and 50.
+
+istree(nil).
+istree(t(_, T1, T2)) :-
+    istree(T1),
+    istree(T2).
+
+
+cbal_tree(0, nil).
+cbal_tree(1, t(x, nil, nil)).
+cbal_tree(N, t(x, T1, T2)) :-
+    N @>= 2,
+    1 is N mod 2,
+    M is N - 1,
+    L is round(M / 2),
+    cbal_tree(L, T1),
+    cbal_tree(L, T2).
+cbal_tree(N, t(x, T1, T2)) :-
+    N @>= 2,
+    0 is N mod 2,
+    L is round(N / 2),
+    P is L - 1,
+    ((cbal_tree(L, T1),
+     cbal_tree(P, T2));
+     (cbal_tree(P, T1),
+     cbal_tree(L, T2))).
+
+symmetric(t(_, T1, T2)) :-
+    mirror(T1, T2).
+mirror(nil, nil).
+mirror(t(_, BA1, BA2), t(_, BB1, BB2)) :-
+    mirror(BA1, BB2),
+    mirror(BA2, BB1).
+
+add(X,nil,t(X,nil,nil)).
+add(X,t(Root,L,R),t(Root,L1,R)) :-
+    X @< Root,
+    add(X,L,L1).
+add(X,t(Root,L,R),t(Root,L,R1)) :-
+    X @> Root,
+    add(X,R,R1).
+
+construct(L, T) :-
+    construct(L, nil, T).
+construct([], T, T).
+construct([H|L], T, R) :-
+    add(H, T, T2),
+    construct(L, T2, R).
+
+test_symmetric(L) :-
+    construct(L, T),
+    symmetric(T).
+
+sym_cbal_tree(N, T) :-
+    cbal_tree(N, T),
+    symmetric(T).
+
+sym_cbal_trees(N, Ts) :-
+    setof(T, sym_cbal_tree(N, T), Ts).
+%256 trees with 57 nodes.
+
+hbal_tree(0, nil).
+hbal_tree(1, t(x, nil, nil)).
+hbal_tree(N, t(x, A, B)) :-
+    N @>= 2,
+    M is N-1,
+    hbal_tree(M, A),
+    hbal_tree(M, B).
+hbal_tree(N, t(x, A, B)) :-
+    N @>= 2,
+    M is N-1,
+    M2 is N-2,
+    ((hbal_tree(M, A),
+      hbal_tree(M2, B));
+     (hbal_tree(M2, A),
+      hbal_tree(M, B))).
+hbal_trees(H, Ts) :-
+    setof(T, hbal_tree(H, T), Ts).
+
+
+many_nodes(nil, 0).
+many_nodes(t(_, nil, nil), 1).
+many_nodes(t(_, A, B), N) :-
+    var(N),
+    many_nodes(A, C),
+    many_nodes(B, D),
+    N is 1 + C + D.
+many_nodes(t(x, A, B), N) :-
+    not(var(N)),
+    M is N-1,
+    M2 is N-2,
+    range(0, M2, R),
+    is_in(C, R),
+    D is M - C,
+    many_nodes(A, C),
+    many_nodes(B, D).
+    
+min_nodes(H, N) :-
+    hbal_trees(H, L),
+    S is round((2 ** H) - 1),
+    min_nodes2(L, S, N).
+min_nodes2([], N, N).
+min_nodes2([H|T], A, N) :-
+    many_nodes(H, S),
+    B is min(A, S),
+    min_nodes2(T, B, N).
+
+hbal_tree_nodes(N, T) :-
+    %istree(T),
+    many_nodes(T, N),
+    hbal_tree_range(1, N, T).
+hbal_tree_range(S, E, T) :-
+    Q is S + 1,
+    S @=< E,
+    (hbal_tree(S, T);
+     hbal_tree_range(Q, E, T)).
+
+p60(S) :-
+    setof(X, hbal_tree_nodes(15, X), L),
+    length(L, S).
+%221 ways to make hbal trees with 15 elements.
+
+count_leaves(nil, 0).
+count_leaves(t(_, nil, nil), 1).
+count_leaves(t(_, A, B), N) :-
+    count_leaves(A, P),
+    count_leaves(B, Q),
+    N is P + Q.
+
+leaves(nil, []).
+leaves(t(X, nil, nil), [X]).
+leaves(t(_, A, B), L) :-
+    leaves(A, L2),
+    leaves(B, L3),
+    append(L2, L3, L).
+
+internals(nil, []).
+internals(t(_, nil, nil), []).
+internals(t(X, A, B), [X|L]) :-
+    internals(A, L2),
+    internals(B, L3),
+    append(L2, L3, L).
+                       
