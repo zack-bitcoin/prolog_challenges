@@ -10,6 +10,8 @@ p(9117007991229937).
 p2(21630080583071).
 path_size(32).%in bits
 
+%can store about 2^(path_size/2) elements until we get our first collision, according to the birthday problem.
+
 hash(K, K2) :-
     %not cryptographically secure! an attacker could make this tree unbalanced.
     %pseudo-random number generator using your key as the seed.
