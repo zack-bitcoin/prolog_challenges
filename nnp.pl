@@ -587,4 +587,58 @@ internals(t(X, A, B), [X|L]) :-
     internals(A, L2),
     internals(B, L3),
     append(L2, L3, L).
-                       
+
+%at_level(T, L, S).%all the nodes at level L in the tree. the root is level 1.
+at_level(nil, _, []).
+at_level(t(X, _, _), 1, [X]).
+at_level(t(_, A, B), L, R) :-
+    L @> 1,
+    M is L-1,
+    at_level(A, M, R2),
+    at_level(B, M, R3),
+    append(R2, R3, R).
+
+complete_binary_tree(N, T) :-
+    cbt2(N, 1, T).
+cbt2(Limit, M, nil) :-
+    M @> Limit.
+cbt2(Limit, M, t(x, A, B)) :-
+    M @> 0,
+    M @=< Limit, 
+    MT is M * 2,
+    MT2 is MT + 1,
+    cbt2(Limit, MT, A),
+    cbt2(Limit, MT2, B).
+    
+%skip 64, 65, 66
+
+
+tree_to_list(nil, []).
+tree_to_list(t(X, nil, nil), [X]).
+tree_to_list(t(X, A, B), [X,'('|L]) :-
+    tree_to_list(A, Ls),
+    tree_to_list(B, Rs),
+    append(Ls, [','], L1),
+    append(L1, Rs, L2),
+    append(L2, [')'], L).
+                
+tree_string(nil, '').
+tree_string(T, S) :-
+    var(T),
+    tree_to_list(T, L),
+    atom_chars(S, L).
+    
+tree_string(t(A, B, C), S) :-
+    var(S),
+    tree_string(C, C2),
+    tree_string(B, B2),
+    atom_concat(A, '(', S2),
+    atom_concat(S2, B2, S3),
+    atom_concat(S3, ',', S4),
+    atom_concat(S4, C2, S5),
+    atom_concat(S5, ')', S).
+ 
+tree_mirror(X, Y) :-
+    tree_string(X, S),
+    tree_string(Y, S).
+    
