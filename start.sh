@@ -1,3 +1,6 @@
+#gplc bigInt.pl
+#./bigInt
+
 #gplc simply_logical.pl
 #./simply_logical
 

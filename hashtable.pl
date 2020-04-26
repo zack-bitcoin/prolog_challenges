@@ -7,23 +7,30 @@
 %get(4, X3, V).
 
 p(9117007991229937).
-p2(21630080583071).
-path_size(32).%in bits
+p1(3309758838196273).
+p2(9701593525309757).
+path_size(64).%in bits
 
 %can store about 2^(path_size/2) elements until we get our first collision, according to the birthday problem.
 
-hash(K, K2) :-
+hash(K, K1, K2) :-
     %not cryptographically secure! an attacker could make this tree unbalanced.
     %pseudo-random number generator using your key as the seed.
     p(Prime),
+    p1(Prime1),
     p2(Prime2),
-    K2 is (K * Prime) mod Prime2.
+    K3 is K + 55,
+    K1 is (K * Prime) mod Prime2,
+    K2 is (K3 * Prime1) mod Prime2.
 
 key2path(K, P) :-
     %This is converting K to binary.
-    hash(K, K2),
-    path_size(Path),
-    key2path(K2, P, Path).
+    hash(K, K1, K2),
+    path_size(Path0),
+    Path is Path0 div 2,
+    key2path(K1, P1, Path),
+    key2path(K2, P2, Path),
+    append(P1, P2, P).
 key2path(_, [], 0).
 key2path(K, [H|T], N) :-
     H is K mod 2,
@@ -61,7 +68,8 @@ get(K, T, V) :-
     %use a key to look up a value.
     key2path(K, P),
     get2(P, T, V).
-get2(P, leaf(P, V), V).
+get2(P, leaf(P, V), V) :- !.
+get2(_, leaf(_, _), empty).
 get2([0|P], stem(A, _), V) :-
     get2(P, A, V).
 get2([1|P], stem(_, B), V) :-
