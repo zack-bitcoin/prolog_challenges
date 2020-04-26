@@ -6,10 +6,15 @@
 %add(5, 'greetings', X2, X3),
 %get(4, X3, V).
 
+
+% can put 10 000 elements into this hashtable in about 70 ms.
+% If you try putting 20 000, then it breaks the 16 mb memory limit and crashes.
+
+
 p(9117007991229937).
 p1(3309758838196273).
 p2(9701593525309757).
-path_size(64).%in bits
+path_size(32).%in bits
 
 %can store about 2^(path_size/2) elements until we get our first collision, according to the birthday problem.
 
@@ -75,3 +80,11 @@ get2([0|P], stem(A, _), V) :-
 get2([1|P], stem(_, B), V) :-
     get2(P, B, V).
 
+
+
+add_many(N, N, _).
+add_many(N, Limit, Tree) :-
+    N < Limit,
+    M is N+1,
+    add(N, N, Tree, Tree2),
+    add_many(M, Limit, Tree2).

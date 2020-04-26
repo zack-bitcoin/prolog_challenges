@@ -1,11 +1,14 @@
+gplc corona.pl
+./corona
+
 #gplc bigInt.pl
 #./bigInt
 
 #gplc simply_logical.pl
 #./simply_logical
 
-gplc hashtable.pl
-./hashtable
+#gplc hashtable.pl
+#./hashtable
 
 #gplc nnp.pl
 #./nnp
