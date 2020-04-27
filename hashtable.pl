@@ -74,9 +74,9 @@ get(K, T, V) :-
     key2path(K, P),
     get2(P, T, V).
 get2(P, leaf(P, V), V) :- !.
-get2(_, leaf(_, _), empty).
+get2(_, leaf(_, _), empty) :- !.
 get2([0|P], stem(A, _), V) :-
-    get2(P, A, V).
+    get2(P, A, V), !.
 get2([1|P], stem(_, B), V) :-
     get2(P, B, V).
 

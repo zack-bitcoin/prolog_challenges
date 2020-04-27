@@ -1,19 +1,19 @@
+%forth interpreter written in prolog.
+%supports custom word definitions.
+%each word definition can have 1 layer of if-else-then statements.
 
 test(X) :-
     forth('first.forth', X).
-
 forth(OldLoc, Result) :-
     open(OldLoc, read, In),
     forth2(In, [], [], nil, nil, Result),
     close(In).
-
 forth2(_In, [end_of_file|S], _R, _HT, _, S) :-
     !.
 forth2(In, S, R, HT, Funs, F) :-
     get_word(In, '', Word),
     process_word(Word, S, R, HT, Funs, S2, R2, HT2, Funs2, In),
     forth2(In, S2, R2, HT2, Funs2, F).
-
 process_word(end_of_file, S, R, HT, Funs,
              [end_of_file|S], R, HT, Funs, _).
 process_word('swap', [A|[B|S]], R, HT, Funs,
@@ -55,23 +55,23 @@ process_word(Word, S, R, HT, Funs,
     numberify_atom(Word, Name),
     get(Name, Funs, Value),
     not(Value == empty),
+    !,
     process_words(Value, S, R, HT, Funs, S2, R2, HT2, Funs2, In).
 
-
 process_words([], S, R, HT, Funs, S, R, HT, Funs, _).
-process_words([then|T], S, R, HT, Funs, S2, R2, HT2, Funs2, In) :-
-    process_words(T, S, R, HT, Funs, S2, R2, HT2, Funs2, In).
 process_words([if|T], [0|S], R, HT, Funs, S2, R2, HT2, Funs2, In) :-
     !,
-    tillX_list(else, T, T2),
-    process_words(T2, S, R, HT, Funs, S2, R2, HT2, Funs2, In).
+    remove_till(else, T, T2),
+    remove_word(then, T2, T3),
+    process_words(T3, S, R, HT, Funs, S2, R2, HT2, Funs2, In).
 process_words([if|T], [_|S], R, HT, Funs, S2, R2, HT2, Funs2, In) :-
-    process_words(T, S, R, HT, Funs, S2, R2, HT2, Funs2, In).
-process_words([else|T], S, R, HT, Funs, S2, R2, HT2, Funs2, In) :-
-    !,
-    tillX_list(then, T, T2),
+    remove_gap(else, then, T, T2),
     process_words(T2, S, R, HT, Funs, S2, R2, HT2, Funs2, In).
+process_words([Word], S, R, HT, Funs, S2, R2, HT2, Funs2, In) :-
+    !,
+    process_word(Word, S, R, HT, Funs, S2, R2, HT2, Funs2, In).
 process_words([Word|T], S, R, HT, Funs, S2, R2, HT2, Funs2, In) :-
+    !,
     process_word(Word, S, R, HT, Funs, S3, R3, HT3, Funs3, In),
     process_words(T, S3, R3, HT3, Funs3, S2, R2, HT2, Funs2, In).
 
@@ -106,7 +106,7 @@ can_number2([H|T]) :-
 numberify_atom(A, N) :-
     atom_codes(A, L),
     numberify_atom2(1, L, N).
-numberify_atom2(N, [], N).
+numberify_atom2(N, [], N):- !.
 numberify_atom2(A, [H|T], R) :-
     A2 is H + (A*100),
     numberify_atom2(A2, T, R).
@@ -115,30 +115,23 @@ numberify_atom2(A, [H|T], R) :-
 get_word(In, P, Result) :-
     get_char(In, C),
     get_word2(In, C, P, Result).
-get_word2(_In, end_of_file, '', end_of_file) :-
-    !.
-get_word2(_In, end_of_file, X, X) :-
-    !.
+get_word2(_In, end_of_file, '', end_of_file).
+get_word2(_In, end_of_file, X, X).
 get_word2(In, ' ', '', Result) :-
-    !,
     get_word(In, '', Result).
 get_word2(In, '\n', '', Result) :-
-    !,
     get_word(In, '', Result).
 get_word2(In, '\t', '', Result) :-
-    !,
     get_word(In, '', Result).
 get_word2(In, '%', '', Result) :-
-    !,
-    tillX('\n', In),
+    ignore_comment('\n', In),
     get_word(In, '', Result).
 
 get_word2(_, ' ', Word, Word) :- !.
 get_word2(_, '\n', Word, Word) :- !.
 get_word2(_, '\t', Word, Word) :- !.
 get_word2(In, '%', Word, Word) :-
-    !,
-    tillX('\n', In).
+    ignore_comment('\n', In).
 
 get_word2(In, C, Word, Result) :-
     get_char(In, C2),
@@ -146,16 +139,25 @@ get_word2(In, C, Word, Result) :-
     get_word2(In, C2, Word2, Result).
 
 
-tillX(X, In) :-
-    tillX(X, In, ' ').
-tillX(X, _, X).
-tillX(_, _, end_of_file).
-tillX(X, In, _) :-
+ignore_comment(X, In) :-
+    ignore_comment(X, In, ' ').
+ignore_comment(X, _, X).
+ignore_comment(_, _, end_of_file).
+ignore_comment(X, In, _) :-
     get_char(In, C),
-    tillX(X, In, C).
+    ignore_comment(X, In, C).
 
-tillX_list(X, [X|R], R).
-tillX_list(X, [_|T], R) :-
-    tillX_list(X, T, R).
+remove_till(X, [X|R], R).
+remove_till(X, [_|T], R) :-
+    remove_till(X, T, R).
+
+remove_word(X, [X|T], T) :- !.
+remove_word(X, [H|T1], [H|T2]) :-
+    remove_word(X, T1, T2).
+
+remove_gap(Start, End, [Start|T1], T2) :-
+    remove_till(End, T1, T2).
+remove_gap(Start, End, [H|T1], [H|T2]) :-
+    remove_gap(Start, End, T1, T2).
     
     

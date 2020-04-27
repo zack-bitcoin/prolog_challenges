@@ -21,4 +21,6 @@ else drop then ;
 
 
 10 fact
-% 1 1 -
+
+: loop 1 drop loop ;
+% loop
