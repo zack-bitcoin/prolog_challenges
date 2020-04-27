@@ -1,5 +1,11 @@
-gplc corona.pl
-./corona
+gplc forth.pl hashtable.pl
+./forth
+
+#gplc pipe.pl hashtable.pl
+#./pipe
+
+#gplc corona.pl
+#./corona
 
 #gplc bigInt.pl
 #./bigInt
