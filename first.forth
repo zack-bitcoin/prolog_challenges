@@ -1,1 +1,2 @@
-23 4 dup drop +
+23 4 dup >r + r>
+: double dup + ; 
