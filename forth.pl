@@ -37,6 +37,22 @@ process_word(Word, S, R, HT, Funs,
     can_number(Word),
     number_atom(N, Word),
     S2 = [N|S].
+process_word(Word, S, R, HT, Funs,
+             S2, R2, HT2, Funs2, In) :-
+    %check if we are calling a function.
+    numberify_atom(Word, Name),
+    get(Name, Funs, Value),
+    not(Value == empty),
+    process_words(Value, S, R, HT, Funs, S2, R2, HT2, Funs2, In).
+
+
+process_words([], S, R, HT, Funs, S, R, HT, Funs, _).
+process_words([Word|T], S, R, HT, Funs, S2, R2, HT2, Funs2, In) :-
+    process_word(Word, S, R, HT, Funs, S3, R3, HT3, Funs3, In),
+    process_words(T, S3, R3, HT3, Funs3, S2, R2, HT2, Funs2, In).
+
+not(X) :-
+    \+ X.
 
 get_function(In, F1, F2) :-
     get_word(In, '', Name0),
