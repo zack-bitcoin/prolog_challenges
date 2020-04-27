@@ -11,7 +11,7 @@ forth(OldLoc, Result) :-
 forth2(_In, [end_of_file|S], _R, _HT, _, S) :-
     !.
 forth2(In, S, R, HT, Funs, F) :-
-    get_word(In, '', Word),
+    read_word(In, '', Word),
     process_word(Word, S, R, HT, Funs, S2, R2, HT2, Funs2, In),
     forth2(In, S2, R2, HT2, Funs2, F).
 process_word(end_of_file, S, R, HT, Funs,
@@ -43,7 +43,7 @@ process_word('mod', [A|[B|S]], R, HT, Funs,
     C is B mod A.
 process_word(':', S, R, HT, Funs,
              S, R, HT, Funs2, In) :-
-    get_function(In, Funs, Funs2).
+    read_function(In, Funs, Funs2).
 process_word(Word, S, R, HT, Funs,
              S2, R, HT, Funs, _) :-
     can_number(Word),
@@ -78,18 +78,18 @@ process_words([Word|T], S, R, HT, Funs, S2, R2, HT2, Funs2, In) :-
 not(X) :-
     \+ X.
 
-get_function(In, F1, F2) :-
-    get_word(In, '', Name0),
+read_function(In, F1, F2) :-
+    read_word(In, '', Name0),
     numberify_atom(Name0, Name),
-    get_function2(In, [], F),
+    read_function2(In, [], F),
     add(Name, F, F1, F2).
-get_function2(In, Fun, Result) :-
-    get_word(In, '', Word),
-    get_function3(In, Fun, Result, Word).
-get_function3(_, Fun, Fun, ';').
-get_function3(In, Fun, Result, Word) :-
+read_function2(In, Fun, Result) :-
+    read_word(In, '', Word),
+    read_function3(In, Fun, Result, Word).
+read_function3(_, Fun, Fun, ';').
+read_function3(In, Fun, Result, Word) :-
     append(Fun,[Word],Fun2),
-    get_function2(In, Fun2, Result).
+    read_function2(In, Fun2, Result).
     
 %can this atom be converted to a number?
 can_number(A) :-
@@ -112,31 +112,31 @@ numberify_atom2(A, [H|T], R) :-
     numberify_atom2(A2, T, R).
 
 
-get_word(In, P, Result) :-
+read_word(In, P, Result) :-
     get_char(In, C),
-    get_word2(In, C, P, Result).
-get_word2(_In, end_of_file, '', end_of_file).
-get_word2(_In, end_of_file, X, X).
-get_word2(In, ' ', '', Result) :-
-    get_word(In, '', Result).
-get_word2(In, '\n', '', Result) :-
-    get_word(In, '', Result).
-get_word2(In, '\t', '', Result) :-
-    get_word(In, '', Result).
-get_word2(In, '%', '', Result) :-
+    read_word2(In, C, P, Result).
+read_word2(_In, end_of_file, '', end_of_file).
+read_word2(_In, end_of_file, X, X).
+read_word2(In, ' ', '', Result) :-
+    read_word(In, '', Result).
+read_word2(In, '\n', '', Result) :-
+    read_word(In, '', Result).
+read_word2(In, '\t', '', Result) :-
+    read_word(In, '', Result).
+read_word2(In, '%', '', Result) :-
     ignore_comment('\n', In),
-    get_word(In, '', Result).
+    read_word(In, '', Result).
 
-get_word2(_, ' ', Word, Word) :- !.
-get_word2(_, '\n', Word, Word) :- !.
-get_word2(_, '\t', Word, Word) :- !.
-get_word2(In, '%', Word, Word) :-
+read_word2(_, ' ', Word, Word) :- !.
+read_word2(_, '\n', Word, Word) :- !.
+read_word2(_, '\t', Word, Word) :- !.
+read_word2(In, '%', Word, Word) :-
     ignore_comment('\n', In).
 
-get_word2(In, C, Word, Result) :-
+read_word2(In, C, Word, Result) :-
     get_char(In, C2),
     atom_concat(Word, C, Word2),
-    get_word2(In, C2, Word2, Result).
+    read_word2(In, C2, Word2, Result).
 
 
 ignore_comment(X, In) :-
