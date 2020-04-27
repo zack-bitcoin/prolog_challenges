@@ -75,9 +75,6 @@ process_words([Word|T], S, R, HT, Funs, S2, R2, HT2, Funs2, In) :-
     process_word(Word, S, R, HT, Funs, S3, R3, HT3, Funs3, In),
     process_words(T, S3, R3, HT3, Funs3, S2, R2, HT2, Funs2, In).
 
-not(X) :-
-    \+ X.
-
 read_function(In, F1, F2) :-
     read_word(In, '', Name0),
     numberify_atom(Name0, Name),
@@ -111,33 +108,26 @@ numberify_atom2(A, [H|T], R) :-
     A2 is H + (A*100),
     numberify_atom2(A2, T, R).
 
-
 read_word(In, P, Result) :-
     get_char(In, C),
     read_word2(In, C, P, Result).
 read_word2(_In, end_of_file, '', end_of_file).
 read_word2(_In, end_of_file, X, X).
-read_word2(In, ' ', '', Result) :-
-    read_word(In, '', Result).
-read_word2(In, '\n', '', Result) :-
-    read_word(In, '', Result).
-read_word2(In, '\t', '', Result) :-
+read_word2(In, C, '', Result) :-
+    white_space(C),
     read_word(In, '', Result).
 read_word2(In, '%', '', Result) :-
     ignore_comment('\n', In),
     read_word(In, '', Result).
-
-read_word2(_, ' ', Word, Word) :- !.
-read_word2(_, '\n', Word, Word) :- !.
-read_word2(_, '\t', Word, Word) :- !.
+read_word2(_, C, Word, Word) :-
+    white_space(C),
+    !.
 read_word2(In, '%', Word, Word) :-
     ignore_comment('\n', In).
-
 read_word2(In, C, Word, Result) :-
     get_char(In, C2),
     atom_concat(Word, C, Word2),
     read_word2(In, C2, Word2, Result).
-
 
 ignore_comment(X, In) :-
     ignore_comment(X, In, ' ').
@@ -150,14 +140,17 @@ ignore_comment(X, In, _) :-
 remove_till(X, [X|R], R).
 remove_till(X, [_|T], R) :-
     remove_till(X, T, R).
-
 remove_word(X, [X|T], T) :- !.
 remove_word(X, [H|T1], [H|T2]) :-
     remove_word(X, T1, T2).
-
 remove_gap(Start, End, [Start|T1], T2) :-
     remove_till(End, T1, T2).
 remove_gap(Start, End, [H|T1], [H|T2]) :-
     remove_gap(Start, End, T1, T2).
     
-    
+white_space(' ').
+white_space('\n').
+white_space('\t').
+
+not(X) :- \+ X.
+
