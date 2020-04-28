@@ -1,5 +1,8 @@
-gplc forth.pl hashtable.pl
-./forth
+gplc lisp.pl hashtable.pl
+./lisp
+
+#gplc forth.pl hashtable.pl
+#./forth
 
 #gplc pipe.pl hashtable.pl
 #./pipe
