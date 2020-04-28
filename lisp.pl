@@ -1,4 +1,3 @@
-
 test(X) :-
     lisp('test.lisp', X).
 lisp(FileLoc, Result) :-
@@ -44,6 +43,12 @@ run([cdr, L], T2, Funs, Funs) :-
 run([cons, H, T], [H2|T2], Funs, Funs) :-
     run(H, H2, Funs, Funs),
     run(T, T2, Funs, Funs).
+run([if, Bool, A, B], R, Funs, Funs) :-
+    run(Bool, X, Funs, _),
+    ((X = 0,
+      run(B, R, Funs, _));
+     (not(X = 0),
+      run(A, R, Funs, _))).
 run([define, Name0, Vars, Fun], none, Funs, Funs2) :-
     numberify_atom(Name0, Name),
     add(Name, [Vars, Fun], Funs, Funs2).
@@ -53,12 +58,8 @@ run(R, Result, _, _) :-
 run([FunName|Inputs], Result, Funs, _) :-
     numberify_atom(FunName, Name),
     get(Name, Funs, [Vars, Fun]),
-    run_function(Fun, Vars, Inputs, Result, Funs).
-
-run_function(Fun, Vars, Inputs, Result, Funs) :-
     bind(Vars, Inputs, Pairs),
     load_vars(Pairs, Fun, Result0),
-    write(Result0),
     run(Result0, Result, Funs, Funs).
 
 load_vars([], X, X).
@@ -72,7 +73,6 @@ load_var([Key, Val], [H|T], [H2|T2]) :-
     load_var([Key, Val], T, T2),
     !.
 load_var(_, X, X).
-
 
 bind([], [], []).
 bind([A|T], [N|TN], [[A, N]|R]) :-
@@ -120,8 +120,6 @@ white_space(' ').
 white_space('\n').
 white_space('\t').
 
-%can_number([]) :- fail.
-%can_number([_|_]) :- fail.
 can_number(A) :-
     atom(A),
     atom_chars(A, L),
@@ -141,3 +139,5 @@ numberify_atom2(A, [H|T], R) :-
     A2 is H + (A*100),
     numberify_atom2(A2, T, R).
 
+
+not(X) :- \+ X.
