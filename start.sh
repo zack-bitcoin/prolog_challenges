@@ -1,5 +1,8 @@
-gplc lisp.pl hashtable.pl
-./lisp
+gplc recursion.pl hashtable.pl
+./recursion
+
+#gplc lisp.pl hashtable.pl
+#./lisp
 
 #gplc forth.pl hashtable.pl
 #./forth

@@ -139,5 +139,4 @@ numberify_atom2(A, [H|T], R) :-
     A2 is H + (A*100),
     numberify_atom2(A2, T, R).
 
-
 not(X) :- \+ X.

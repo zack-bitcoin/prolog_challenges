@@ -11,10 +11,14 @@
 % If you try putting 20 000, then it breaks the 16 mb memory limit and crashes.
 
 
-p(9117007991229937).
-p1(3309758838196273).
-p2(9701593525309757).
-path_size(32).%in bits
+p(X):-
+    X = 9117007991229937.
+p1(X) :-
+    X = 3309758838196273.
+p2(X) :-
+    X = 9701593525309757.
+path_size(X) :-
+    X = 32.%in bits
 
 %can store about 2^(path_size/2) elements until we get our first collision, according to the birthday problem.
 
@@ -36,12 +40,24 @@ key2path(K, P) :-
     key2path(K1, P1, Path),
     key2path(K2, P2, Path),
     append(P1, P2, P).
-key2path(_, [], 0).
+key2path(_, T, 0) :-
+    T = [],
+    !.
 key2path(K, [H|T], N) :-
     H is K mod 2,
     K2 is K div 2,
     M is N - 1,
+    !,
     key2path(K2, T, M).
+
+key2path2(_, P, P, 0) :-
+    !.
+key2path2(K, P, F, N) :-
+    M is N - 1,
+    H is K mod 2,
+    K2 is K div 2,
+    !,
+    key2path2(K2, [H|P], F, M).
 
 add(K,V,T,U) :-
     %store a key-value pair in the dictionary.
@@ -73,13 +89,19 @@ get(K, T, V) :-
     %use a key to look up a value.
     key2path(K, P),
     get2(P, T, V).
+get2(_, nil, empty) :- !.
 get2(P, leaf(P, V), V) :- !.
-get2(_, leaf(_, _), empty) :- !.
+get2(P, leaf(Q, _), empty) :-
+    not(P = Q),
+    !.
 get2([0|P], stem(A, _), V) :-
-    get2(P, A, V), !.
+    !,
+    get2(P, A, V).
 get2([1|P], stem(_, B), V) :-
+    !,
     get2(P, B, V).
 
+not(X) :- \+ X.
 
 
 add_many(N, N, _).
@@ -88,3 +110,19 @@ add_many(N, Limit, Tree) :-
     M is N+1,
     add(N, N, Tree, Tree2),
     add_many(M, Limit, Tree2).
+
+numberify_atom(A, N) :-
+    atom_codes(A, L),
+    numberify_atom2(1, L, N).
+numberify_atom2(N, [], N):- !.
+numberify_atom2(A, [H|T], R) :-
+    A2 is H + (A*100),
+    numberify_atom2(A2, T, R).
+
+atom_get(K, T, V) :-
+    numberify_atom(K, N),
+    get(N, T, V).
+
+atom_add(K, V, T, U) :-
+    numberify_atom(K, N),
+    add(N, V, T, U).

@@ -67,13 +67,18 @@ process_words([if|T], [0|S], R, HT, Funs, S2, R2, HT2, Funs2, In) :-
 process_words([if|T], [_|S], R, HT, Funs, S2, R2, HT2, Funs2, In) :-
     remove_gap(else, then, T, T2),
     process_words(T2, S, R, HT, Funs, S2, R2, HT2, Funs2, In).
-process_words([Word], S, R, HT, Funs, S2, R2, HT2, Funs2, In) :-
-    !,
-    process_word(Word, S, R, HT, Funs, S2, R2, HT2, Funs2, In).
 process_words([Word|T], S, R, HT, Funs, S2, R2, HT2, Funs2, In) :-
-    !,
-    process_word(Word, S, R, HT, Funs, S3, R3, HT3, Funs3, In),
-    process_words(T, S3, R3, HT3, Funs3, S2, R2, HT2, Funs2, In).
+    %atom(Word),
+    %numberify_atom(Word, Name),
+    %get(Name, Funs, Value),
+    ((%Value = empty,
+      !,
+      process_word(Word, S, R, HT, Funs, S3, R3, HT3, Funs3, In),
+      process_words(T, S3, R3, HT3, Funs3, S2, R2, HT2, Funs2, In));
+     ((not(Value = empty),
+       append(Value, T, T2),
+       !,
+       process_words(T2, S, R, HT, Funs, S2, R2, HT2, Funs2, In)))).
 
 read_function(In, F1, F2) :-
     read_word(In, '', Name0),
@@ -100,13 +105,6 @@ can_number2([H|T]) :-
     can_number2(T).
 
 %the hashtable can only store by integer key. So we need a way to deterministically convert atoms into integers, and we don't want different atoms to collide with the same integer.
-numberify_atom(A, N) :-
-    atom_codes(A, L),
-    numberify_atom2(1, L, N).
-numberify_atom2(N, [], N):- !.
-numberify_atom2(A, [H|T], R) :-
-    A2 is H + (A*100),
-    numberify_atom2(A2, T, R).
 
 read_word(In, P, Result) :-
     get_char(In, C),
@@ -152,5 +150,4 @@ white_space(' ').
 white_space('\n').
 white_space('\t').
 
-not(X) :- \+ X.
 
